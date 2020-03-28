@@ -1,5 +1,7 @@
-const puppeteer = require('puppeteer');
-const tesseract = require('node-tesseract')
+import puppeteer from 'puppeteer';
+import tesseract from 'node-tesseract';
+
+
 
 const inputData = [
     { cno: 170688856348, div: 4636 },
@@ -16,7 +18,8 @@ const inputData = [
     { cno: 170688852059, div: 4636 }
 ]
 
-downloadBills();
+
+// downloadBills();
 
 
 async function downloadBills() {

@@ -5,13 +5,14 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js"
+    "start": "node readExcel.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "node-tesseract": "github:saraogipraveen/node-tesseract#master",
-    "puppeteer": "^2.1.1"
+    "puppeteer": "^2.1.1",
+    "read-excel-file": "^4.0.6"
   }
 }

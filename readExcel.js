@@ -1,5 +1,4 @@
-// const readXlsxFile = require('read-excel-file/node');
-import readXlsxFile from 'read-excel-file'
+const readXlsxFile = require('read-excel-file/node');
 const schema = {
     'Consumer': {
         prop: 'consumer',
@@ -13,17 +12,26 @@ const schema = {
     }
 }
 const file = 'bills.xlsx';
-console.log('hello')
 
-console.log("input", input)
-const input = document.getElementById('excelFile')
-
-input.addEventListener('change', () => {
-    readXlsxFile(input.files[0], { schema }).then(({ rows, errors }) => {
-        console.log("errors", errors)
-        console.log("rows", rows)
+function readExcelFile() {
+    return new Promise((resolve, reject) => {
+        readXlsxFile(file, { schema }).then(({ rows, errors }) => {
+            errors.length > 0 ? reject(errors) : resolve(rows)
+        })
     })
-})
+}
+
+
+module.exports = readExcelFile
+
+// const input = document.getElementById('excelFile')
+
+// input.addEventListener('change', () => {
+//     readXlsxFile(input.files[0], { schema }).then(({ rows, errors }) => {
+//         console.log("errors", errors)
+//         console.log("rows", rows)
+//     })
+// })
 
 
 

@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Document</title>
+    <script src="https://requirejs.org/docs/release/2.3.5/minified/require.js"></script>
 </head>
 
 <body>
@@ -14,21 +15,8 @@
 
     <button onclick="readExcel()">Start the action</button>
 
-    <script nomodule src="readExcel.js"></script>
-    <script>
-        (function(){
-            import readXlsxFile from 'read-excel-file'
+    <script src="readExcel.js"></script>
 
-            const input = document.getElementById('excelFile')
-            console.log("input", input)
-            input.addEventListener('change', () => {
-                readXlsxFile(input.files[0], { schema }).then(({ rows, errors }) => {
-                    console.log("errors", errors)
-                    console.log("rows", rows)
-                })
-            })
-        })()
-    </script>
 </body>
 
 </html>

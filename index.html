@@ -9,11 +9,37 @@
     <script src="https://requirejs.org/docs/release/2.3.5/minified/require.js"></script>
 </head>
 
+<style>
+    input {
+        padding: 1rem;
+        background: dodgerblue;
+        color: white;
+    }
+
+    form {
+        display: flex;
+        justify-content: space-evenly;
+        align-items: center;
+    }
+
+    button {
+        padding: 4px 8px;
+        font-size: 14px;
+        border-radius: 4px;
+        border: none;
+        color: white;
+        background-color: #7c7c7c;
+        box-shadow: 0 0 2px 2px #1c1c1c;
+    }
+</style>
+
 <body>
     <h1>Electricity Bill Downloader</h1>
-    <input type="file" name="excel" id="excelFile">
-
-    <button onclick="readExcel()">Start the action</button>
+    <form method="POST" action="/file">
+        <input type="file" name="excel" id="excelFile">
+        <!-- <button onclick="readExcel()">Start the action</button> -->
+        <button type="submit">Send file</button>
+    </form>
 
     <script src="readExcel.js"></script>
 

@@ -4,16 +4,31 @@ const readFile = require('./readExcel')
 const each = require('promise-each');
 const fs = require('fs');
 
-async function init(rows){
+const EventEmitter = require('events');
+
+let myEventEmitter = new EventEmitter();
+
+myEventEmitter.on('pdf-generated', (label, customer) => {
+    console.info(`pdf generated for month ${label} for customer : ${customer}`);
+})
+
+async function initBrowser(){
+    const browser = await puppeteer.launch({ headless: false });
+    return browser;
+}
+
+async function init(rows, browser){
     try {
         if(rows)
         {
             !fs.existsSync(`downloads`) && fs.mkdirSync(`downloads`);
             rows.splice(0,1);
             rows.map(async (row) => {
-                const browser = await puppeteer.launch({ headless: true });
+                // const browser = await puppeteer.launch({ headless: false });
                 let [ consumer, unit, inputMonths ] = row;
-                consumer = `0${consumer}`;
+                consumer = `${consumer}`
+                if(consumer.length == 11)
+                    consumer = `0${consumer}`;
                 unit = `${unit}`;
                 if(unit.length == 3)
                     unit = `0${unit}`;
@@ -25,9 +40,7 @@ async function init(rows){
             resolve(1);
         })
     }
-    catch (e) {
-        console.log("inside catch block", e)
-    }    
+    finally {}
 }
 
 function readCaptchaNumber() {
@@ -45,7 +58,7 @@ function readCaptchaNumber() {
 async function downloadBills(browser, consumer, unit, inputMonths) {
     try {
         months = inputMonths.split(/\W+/);
-        
+        console.log(`consumer : ${consumer} \t typeof consumer : ${typeof consumer}`)
         const page = await browser.newPage();
         await page.goto('http://wss.mahadiscom.in/wss/wss_view_pay_bill.aspx');
 
@@ -54,7 +67,7 @@ async function downloadBills(browser, consumer, unit, inputMonths) {
             await page.on('dialog', async (dialog) => {
                 console.log("inside dialog : ", await dialog.message());
                 res = await dialog.dismiss();
-                throw Error('Invalid Captcha');
+                throw Error(await dialog.message());
             });
             return temp;
         }));
@@ -107,8 +120,9 @@ async function downloadBills(browser, consumer, unit, inputMonths) {
         })));
         await browser.close();
     } catch (error) {
-        console.log(`error : ` , error.message, inputMonths);
-        await downloadBills(browser, consumer, unit, inputMonths);
+        console.log(`error : ` , error.message, error);
+        if(error.message != `Given combination of consumer number ,consumer type and BU do not match`)
+            await downloadBills(browser, consumer, unit, inputMonths);
     }
 }
 
@@ -144,16 +158,30 @@ async function downloadPdf(browser, page, imgid, consumer) {
     })
     console.log('bill_month : ' + billMonth);
     const printButtonContainer = await newPage.$('.printButtonContainer button')
-    // await printButtonContainer.click();
+    //await printButtonContainer.click();
     await newPage.emulateMedia('print');
     let pdfOptions = {
         path: `${__dirname + `/downloads/${consumer}/`}${billMonth}.pdf`, 
         format: 'A4', 
         displayHeaderFooter: true
     }
+    await newPage.waitFor(30000);
     await newPage.pdf(pdfOptions);
+    myEventEmitter.emit('pdf-generated', billMonth, consumer);
+    // await newPage.waitFor(30000);
     await newPage.close();
     // pages.push(newPage);
 }
 
-module.exports = { init, downloadBills };
+// async function getPdf(page, pdfOptions){
+//     return new Promise(async (resolve, reject) => {
+//         try {
+//             await page.pdf(pdfOptions);
+//             resolve();
+//         }catch(error) {
+//             reject(error);
+//         }
+//     })
+// }
+
+module.exports = { init, downloadBills, initBrowser };

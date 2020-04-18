@@ -2,7 +2,7 @@ const express = require('express');
 const fs = require('fs');
 const app = express();
 const xlsxFile = require('read-excel-file/node');
-const {init, downloadBills} = require('./index');
+const {init, downloadBills, initBrowser} = require('./index2');
 
 const PORT = 4600;
 
@@ -16,8 +16,10 @@ app.post('/file', async (req, res) => {
   
   xlsxFile(fs.createReadStream(__dirname + `/${req.body.excel}`))
   .then(async (rows) => {
-    // console.table(rows);
-    await init(rows);
+    console.table(rows);
+    // return;
+    let browser = await initBrowser();
+    await init(rows, browser);
     res.end();
   })
   .catch(error => {

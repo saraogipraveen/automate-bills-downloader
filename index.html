@@ -6,55 +6,242 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Document</title>
-    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
 </head>
 
 <style>
+    *,
+    *::after,
+    *::before {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    :root {
+        font-size: 62.5%;
+    }
+
+    body {
+        padding-bottom: 1rem;
+    }
+
+    nav {
+        padding: 2rem;
+        font-size: 2.4rem;
+        color: white;
+        background: linear-gradient(to right, #0ba360, #3cba92);
+    }
+
+    .nav-div {
+        height: .2rem;
+        width: 0%;
+        background-color: dodgerblue;
+        animation: move 4s ease forwards;
+        box-shadow: 0 2px .8rem 1.5px #0ba360;
+    }
+
+    .container {
+        margin: 2rem;
+        display: flex;
+        justify-content: space-around;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
     input {
+        margin: 1rem;
         padding: 1rem;
+        border-radius: 10rem;
         background: dodgerblue;
         color: white;
     }
 
-    form {
-        display: flex;
-        justify-content: space-evenly;
-        align-items: center;
-    }
-
     button {
-        padding: 4px 8px;
-        font-size: 14px;
-        border-radius: 4px;
+        padding: 1rem 1.6rem;
+        font-size: 1.6rem;
+        border-radius: 10rem;
         border: none;
         color: white;
+        display: inline-block;
         background-color: #7c7c7c;
-        box-shadow: 0 0 2px 2px #1c1c1c;
+        position: relative;
+        transition: all .3s;
+        cursor: pointer;
+    }
+
+    button::before {
+        content: "";
+        position: absolute;
+        display: inline-block;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 100%;
+        z-index: -1;
+        border-radius: 10rem;
+        background-color: #7c7c7c;
+        transition: all .3s;
+    }
+
+    button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 .3rem 1rem #7c7c7c;
+    }
+
+    button:hover::before {
+        transform: scale(1.2);
+        opacity: 0;
+    }
+
+    button:active {
+        transform: translateY(2px);
+    }
+
+    button:focus {
+        outline: none;
+    }
+
+    .disabled {
+        background-color: #e1e1e1;
+        color: #7c7c7c;
+        cursor: default;
+    }
+
+    .disabled::before {
+        background-color: #e1e1e1;
+        color: #7c7c7c;
+        cursor: default;
+    }
+
+    .list-container {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    ul {
+        margin: 2rem;
+        max-height: 60vh;
+        overflow-y: auto;
+        list-style: none;
+    }
+
+    li {
+        padding: 1rem 1.6rem;
+        border-left: 4px solid dodgerblue;
+        margin: .4rem 0;
+        color: white;
+        font-size: 1.6rem;
+        background: linear-gradient(to right, #0ba360, #3cba92);
+        /* background: linear-gradient(to right, #00B4DB, #0083B0, );  */
+        /* #1f4037, #99f2c8); */
+    }
+
+    .error {
+        background: linear-gradient(to right, #ffb199, #ff0844);
+    }
+
+    .complete-button {
+        margin: 0 calc(43% - 6rem);
+    }
+
+    @media only screen and (max-width: 550px) {
+        .list-container {
+            grid-template-columns: 1fr;
+            gap: .5fr;
+        }
+    }
+
+    @keyframes move {
+        100% {
+            width: 100%;
+        }
     }
 </style>
 
 <body>
-    <h1>Electricity Bill Downloader</h1>
-    <input type="file" name="excel" id="excel_file">
-    <!-- <input type="text" name="path" id="download_path"> -->
-    <button onclick="uploadFile()">Start Downloading</button>
+    <nav>Electricity Bill Downloader</nav>
+    <div class="nav-div"></div>
+    <div class="container">
+        <input type="file" name="excel" id="excel_file">
+        <button id="start" onclick="uploadFile()">Start Downloading</button>
 
-    <ul id="list">
-    </ul>
+        <div class="list-container">
+            <ul id="success-list">
+            </ul>
+            <ul id="error-list">
+            </ul>
+        </div>
+    </div>
 
     <script>
-            var socket = io();
+        var socket = io();
 
-            socket.on('pdf-generated', (arg) => {
-                $('#list').append($('<li>').text(`Pdf generated for ${arg.billMonth} for consumer ${arg.consumer}`));
-            })
+        socket.on('process-started', function(){
+            let startButton = document.querySelector('#start');
+            start.classList.add('disabled');
+            start.disabled = true;
+        })
 
-            socket.on('waiting-for-user', function(){
-                $('body').append($('<button id="done">').text(` Done `));
-            })
+        socket.on('pdf-generated', (arg) => {
+            let li = document.createElement("li");
+            let liTextNode = document.createTextNode(`Pdf generated for ${arg.billMonth} for consumer ${arg.consumer}`);
+            li.appendChild(liTextNode);
+            document.querySelector('#success-list').appendChild(li);
+        })
 
-            async function uploadFile() {
+        socket.on('pdf-error', arg => {
+            let li = document.createElement("li");
+            let liTextNode = document.createTextNode(`Error : ${arg.message} while downloading pdf for consumer ${arg.consumer}`);
+            li.classList.add('error');
+            li.appendChild(liTextNode);
+            document.querySelector('#error-list').appendChild(li);
+        })
+
+        socket.on('waiting-for-user', function () {
+            let button = document.createElement("button");
+            let buttonTextNode = document.createTextNode(`Process Completed`);
+            button.classList.add('complete-button');
+            button.appendChild(buttonTextNode);
+            button.addEventListener('click', () => socket.emit('response-from-user'));
+            document.querySelector('body').appendChild(button);
+
+            let startButton = document.querySelector('#start');
+            start.classList.remove('disabled');
+            start.disabled = false;
+        })
+
+        socket.on('file-error', function (error) {
+            let ul = document.createElement("ul");
+            ul.setAttribute("id", "pdf-error");
+            let li = document.createElement("li");
+            let liTextNode = document.createTextNode(`Error : ${error}`);
+            li.classList.add('error');
+            li.appendChild(liTextNode);
+            ul.appendChild(li);
+            document.querySelector('body').appendChild(ul);
+        })
+
+        socket.on('perform-cleanup', function () {
+            let pdfError = document.querySelector('#pdf-error');
+            pdfError && pdfError.parentNode.removeChild(pdfError);
+            let completeButton = document.querySelector('.complete-button');
+            completeButton && completeButton.parentNode.removeChild(completeButton);
+            let successList = document.querySelector('#success-list');
+            if (successList) {
+                while (successList.hasChildNodes()) {
+                    successList.removeChild(successList.childNodes[0]);
+                }
+            }
+            let errorList = document.querySelector('#error-list');
+            if (errorList) {
+                while (errorList.hasChildNodes()) {
+                    errorList.removeChild(errorList.childNodes[0]);
+                }
+            }
+        })
+
+        async function uploadFile() {
             let formData = new FormData();
             let excel = document.getElementById("excel_file").files[0];
             formData.append("excel", excel);

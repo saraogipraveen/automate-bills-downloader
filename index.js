@@ -4,6 +4,7 @@ const each = require("promise-each");
 const fs = require("fs");
 let io = null;
 let socket = null;
+let errorMessage = null;
 const EventEmitter = require("events");
 
 let myEventEmitter = new EventEmitter();
@@ -65,7 +66,8 @@ function readCaptchaNumber() {
 
 async function downloadBills(browser, consumer, unit, inputMonths) {
   try {
-    months = inputMonths.split(/\W+/);
+    months = inputMonths.trim().split(/\W+/);
+    console.log('months', months);
     const page = await browser.newPage();
     await page.goto("http://wss.mahadiscom.in/wss/wss_view_pay_bill.aspx", {waitUntil:'networkidle2'});
 
@@ -73,8 +75,16 @@ async function downloadBills(browser, consumer, unit, inputMonths) {
       each(async (temp) => {
         await page.on("dialog", async (dialog) => {
           console.log("inside dialog : ", await dialog.message());
+          let errorMessage = await dialog.message();
           res = await dialog.dismiss();
-          throw Error(await dialog.message());
+          // console.log(`TYPE : `, typeof errorMessage);
+          // console.log("errorMessage again: ", errorMessage, "\t trimmed : ", errorMessage.trim(), "\t ANSWER", errorMessage.trim() == "Invalid Captcha");
+        
+          socket.emit('pdf-error', {message: 'some error occurred', consumer});
+          // if(errorMessage.trim() == "Invalid Captcha" || errorMessage.trim() == "Enter Captcha First")
+          //   await downloadBills(browser, consumer, unit, inputMonths);
+          // else socket.emit('pdf-error', `Error : ${errorMessage}`);
+          // throw Error(await dialog.message());
         });
         return temp;
       })
@@ -87,7 +97,7 @@ async function downloadBills(browser, consumer, unit, inputMonths) {
     const divEl = await page.$("#txtBUFilter");
     divEl.focus();
     await page.keyboard.type(unit);
-
+    
     await page.keyboard.press("Tab");
 
     let captcha = await page.$("#captcha");
@@ -130,14 +140,23 @@ async function downloadBills(browser, consumer, unit, inputMonths) {
       )
     );
   } catch (error) {
-    console.log(`error : `, error.message, error);
-    if (
-      error.message !=
-      `Given combination of consumer number ,consumer type and BU do not match`
-    )
-      await downloadBills(browser, consumer, unit, inputMonths);
+    console.log(`MERA ERROR : `, error.message, error);
+    if(error.message == "Evaluation failed")
+      socket.emit('pdf-error', {message: 'some error occurred', consumer});
+    
+    
+    socket.on('response-from-user', function(){
+      socket.emit('perform-cleanup');
+    });
+      // socket.emit('pdf-error', {message: 'some error occurred', consumer});
+    // if (
+    //   error.message !=
+    //   `Given combination of consumer number ,consumer type and BU do not match`
+    // )
+    //   await downloadBills(browser, consumer, unit, inputMonths);
   }
 }
+
 
 function readCaptchaNumber() {
   return new Promise((resolve, reject) => {

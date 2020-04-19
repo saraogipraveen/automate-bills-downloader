@@ -2,7 +2,8 @@ const puppeteer = require("puppeteer");
 const tesseract = require("node-tesseract");
 const each = require("promise-each");
 const fs = require("fs");
-
+let io = null;
+let socket = null;
 const EventEmitter = require("events");
 
 let myEventEmitter = new EventEmitter();
@@ -16,8 +17,11 @@ async function initBrowser() {
   return browser;
 }
 
-async function init(rows, browser) {
+async function init(rows, browser, ioInstance, socketInstance) {
   try {
+    io = ioInstance;
+    socket = socketInstance;
+    // socket.emit('new-event', {new: 'new'});
     if (rows) {
       !fs.existsSync(`downloads`) && fs.mkdirSync(`downloads`);
       rows.splice(0, 1);
@@ -181,6 +185,7 @@ async function downloadPdf(browser, page, imgid, consumer) {
   await newPage.waitFor(500);
   await newPage.pdf(pdfOptions);
   myEventEmitter.emit("pdf-generated", billMonth, consumer);
+  socket.emit('pdf-generated', {billMonth, consumer});
   await newPage.close();
 }
 

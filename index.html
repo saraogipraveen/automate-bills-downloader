@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Document</title>
-    <script src="https://requirejs.org/docs/release/2.3.5/minified/require.js"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
 </head>
 
 <style>
@@ -37,12 +38,23 @@
     <h1>Electricity Bill Downloader</h1>
     <form method="POST" action="/file">
         <input type="file" name="excel" id="excelFile">
-        <!-- <button onclick="readExcel()">Start the action</button> -->
         <button type="submit">Send file</button>
     </form>
+    <ul id="list">
+    </ul>
+    
+    <script>
+            var socket = io();
+            
+            socket.on('pdf-generated', (arg) => {
+                $('#list').append($('<li>').text(`Pdf generated for ${arg.billMonth} for consumer ${arg.consumer}`));
+            })
 
-    <script src="readExcel.js"></script>
-
+            socket.on('waiting-for-user', function(){
+                $('body').append($('<button id="done">').text(` Done `));
+            })
+        // })
+    </script>
 </body>
 
 </html>

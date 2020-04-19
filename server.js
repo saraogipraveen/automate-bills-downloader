@@ -1,8 +1,13 @@
-const express = require('express');
 const fs = require('fs');
-const app = express();
+let express = require('express');
+const app = require('express')();
+const http = require('http').createServer(app);
+let io = require('socket.io')(http);
 const xlsxFile = require('read-excel-file/node');
 const {init, initBrowser} = require('./index');
+
+
+let xlsx = require('node-xlsx');
 
 const PORT = 4600;
 
@@ -11,13 +16,33 @@ app.use(express.urlencoded({extended: true}))
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
 });
+let socketInstance = null;
+
+io.on('connection', socket => {
+  socketInstance = socket;
+  // socketInstance.emit('new-event', {new: 'new'});
+  console.log('a user connected');
+})
+
+
 
 app.post('/file', async (req, res) => {
   try {
-    const rows = await xlsxFile(fs.createReadStream(__dirname + `/${req.body.excel}`))
-    console.table(rows);
+    let rows = null;
+    fs.exists(__dirname + `/${req.body.excel}`, function(exists) {
+      if(exists) {
+        var obj = xlsx.parse(__dirname + `/${req.body.excel}`);
+        rows = obj[0].data.filter(row => row.length >= 1);
+        console.table(rows);
+      }
+      else {
+        console.log(`file doesn't exist`);
+      }
+    })
     let browser = await initBrowser();
-    await init(rows, browser);
+    await init(rows, browser, io, socketInstance);
+    await browser.close();
+    io.emit('waiting-for-user');
     res.end();
   }
   catch(error) {
@@ -26,7 +51,8 @@ app.post('/file', async (req, res) => {
   }
 })
 
-app.listen(PORT, () => console.log(`Server is running on port ${PORT}`)); 
+// app.listen(PORT, () => console.log(`Server is running on port ${PORT}`)); 
+http.listen(PORT, () => console.log(`Server is running on port ${PORT}`)); 
 
 
 /*
@@ -41,3 +67,5 @@ app.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
 170688852059	4636	nov,aug
 
 */
+
+module.exports = { io }

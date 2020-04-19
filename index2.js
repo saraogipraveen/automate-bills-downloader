@@ -1,6 +1,5 @@
 const puppeteer = require("puppeteer");
 const tesseract = require("node-tesseract");
-const readFile = require("./readExcel");
 const each = require("promise-each");
 const fs = require("fs");
 
@@ -17,7 +16,7 @@ async function initBrowser() {
   return browser;
 }
 
-async function init(rows, browser) {
+async function init(rows, browser, downloadPath) {
   try {
     if (rows) {
       !fs.existsSync(`downloads`) && fs.mkdirSync(`downloads`);
@@ -90,7 +89,7 @@ async function downloadBills(browser, consumer, unit, inputMonths) {
     let captcha = await page.$("#captcha");
     await captcha.screenshot({ path: `${__dirname}/downloads/captcha.png` });
     const captcha_number = await readCaptchaNumber();
-    
+
     let captchaField = await page.$("#txtInput");
     captchaField.focus();
     await page.keyboard.type(captcha_number);
@@ -170,8 +169,8 @@ async function downloadPdf(browser, page, imgid, consumer) {
   let billMonth = await newPage.evaluate(() => {
     return document.getElementById("billMonth").innerText;
   });
-  const printButtonContainer = await newPage.$(".printButtonContainer button");
   await newPage.emulateMedia("print");
+  let filename = `${consumer}_${billMonth}`
   let pdfOptions = {
     path: `${__dirname + `/downloads/${consumer}/`}${billMonth}.pdf`,
     format: "A4",

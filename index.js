@@ -1,6 +1,5 @@
 const puppeteer = require('puppeteer')
 const tesseract = require('node-tesseract')
-const readFile = require('./readExcel')
 const each = require('promise-each');
 const fs = require('fs');
 
@@ -90,13 +89,13 @@ async function downloadBills(browser, consumer, unit, inputMonths) {
         let captchaField = await page.$('#txtInput')
         captchaField.focus();
         await page.keyboard.type(captcha_number);
-        
+
         await page.click('#lblSubmit');
-        
+
         await page.waitForSelector('#billing_detail');
 
         await page.click('#billing_detail');
-        
+
         await page.waitForSelector('#grdCustBillingDetails');
 
         const img_ids = await page.evaluate((months) => {
@@ -141,7 +140,7 @@ function readCaptchaNumber() {
 async function downloadPdf(browser, page, imgid, consumer) {
     !fs.existsSync(`${__dirname}/downloads/${consumer}`) && fs.mkdirSync(`${__dirname}/downloads/${consumer}`);
 
-    let downloadButton = await page.$(imgid);        
+    let downloadButton = await page.$(imgid);
 
     await downloadButton.click();
 
@@ -150,7 +149,7 @@ async function downloadPdf(browser, page, imgid, consumer) {
         return target.opener() === pageTarget
     });
 
-    const newPage = await newTarget.page(); 
+    const newPage = await newTarget.page();
 
     await newPage.waitForSelector("#billMonth"); //wait for page to be loaded
     let billMonth = await newPage.evaluate(() => {
@@ -161,8 +160,8 @@ async function downloadPdf(browser, page, imgid, consumer) {
     //await printButtonContainer.click();
     await newPage.emulateMedia('print');
     let pdfOptions = {
-        path: `${__dirname + `/downloads/${consumer}/`}${billMonth}.pdf`, 
-        format: 'A4', 
+        path: `${__dirname + `/downloads/${consumer}/`}${billMonth}.pdf`,
+        format: 'A4',
         displayHeaderFooter: true
     }
     await newPage.waitFor(30000);

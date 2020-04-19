@@ -4,14 +4,14 @@ const app = require('express')();
 const http = require('http').createServer(app);
 let io = require('socket.io')(http);
 const xlsxFile = require('read-excel-file/node');
-const {init, initBrowser} = require('./index');
-
+const { init, initBrowser } = require('./index');
+const formidable = require('formidable')
 
 let xlsx = require('node-xlsx');
 
 const PORT = 4600;
 
-app.use(express.urlencoded({extended: true}))
+app.use(express.urlencoded({ extended: true }))
 
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
@@ -28,31 +28,44 @@ io.on('connection', socket => {
 
 app.post('/file', async (req, res) => {
   try {
-    let rows = null;
-    fs.exists(__dirname + `/${req.body.excel}`, function(exists) {
-      if(exists) {
-        var obj = xlsx.parse(__dirname + `/${req.body.excel}`);
-        rows = obj[0].data.filter(row => row.length >= 1);
-        console.table(rows);
+    let form = new formidable.IncomingForm();
+    form.parse(req, async function (err, fields, files) {
+      if (err) {
+        // Check for and handle any errors here.
+        console.error(err.message);
+        return;
       }
-      else {
-        console.log(`file doesn't exist`);
-      }
+      let excel = files.excel;
+      // let download_path = fields.downloadPath;
+
+      console.log("excel", excel)
+      console.log("excel.name", excel.name)
+      let rows = null;
+      fs.exists(__dirname + `/${excel.name}`, function (exists) {
+        if (exists) {
+          var obj = xlsx.parse(__dirname + `/${excel.name}`);
+          rows = obj[0].data.filter(row => row.length >= 1);
+          console.table(rows);
+        }
+        else {
+          console.log(`file doesn't exist`);
+        }
+      })
+      let browser = await initBrowser();
+      await init(rows, browser, io, socketInstance);
+      await browser.close();
+      io.emit('waiting-for-user');
+      res.end();
     })
-    let browser = await initBrowser();
-    await init(rows, browser, io, socketInstance);
-    await browser.close();
-    io.emit('waiting-for-user');
-    res.end();
   }
-  catch(error) {
+  catch (error) {
     console.error(error.message);
     res.end();
   }
 })
 
-// app.listen(PORT, () => console.log(`Server is running on port ${PORT}`)); 
-http.listen(PORT, () => console.log(`Server is running on port ${PORT}`)); 
+// app.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
+http.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
 
 
 /*

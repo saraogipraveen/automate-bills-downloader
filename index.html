@@ -36,16 +36,16 @@
 
 <body>
     <h1>Electricity Bill Downloader</h1>
-    <form method="POST" action="/file">
-        <input type="file" name="excel" id="excelFile">
-        <button type="submit">Send file</button>
-    </form>
+    <input type="file" name="excel" id="excel_file">
+    <!-- <input type="text" name="path" id="download_path"> -->
+    <button onclick="uploadFile()">Start Downloading</button>
+
     <ul id="list">
     </ul>
-    
+
     <script>
             var socket = io();
-            
+
             socket.on('pdf-generated', (arg) => {
                 $('#list').append($('<li>').text(`Pdf generated for ${arg.billMonth} for consumer ${arg.consumer}`));
             })
@@ -53,7 +53,22 @@
             socket.on('waiting-for-user', function(){
                 $('body').append($('<button id="done">').text(` Done `));
             })
-        // })
+
+            async function uploadFile() {
+            let formData = new FormData();
+            let excel = document.getElementById("excel_file").files[0];
+            formData.append("excel", excel);
+            // formData.append("downloadPath", downloadPath);
+
+            try {
+                let r = await fetch('/file', { method: "POST", body: formData });
+                console.log('HTTP response code:', r.status);
+            } catch (e) {
+                console.log('Huston we have problem...:', e);
+            }
+
+
+        }
     </script>
 </body>
 

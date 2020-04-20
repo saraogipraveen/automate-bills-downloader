@@ -4,15 +4,25 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js"
+    "start": "nodemon server.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "express": "^4.17.1",
+    "express-fileupload": "^1.1.7-alpha.3",
+    "formidable": "^1.2.2",
+    "multer": "^1.4.2",
     "node-tesseract": "github:saraogipraveen/node-tesseract#master",
+    "node-xlsx": "^0.15.0",
+    "promise-each": "^2.2.0",
     "puppeteer": "^2.1.1",
-    "read-excel-file": "^4.0.6"
+    "read-excel-file": "^4.0.6",
+    "socket.io": "^2.3.0",
+    "zip-a-folder": "0.0.12"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.2"
   }
 }

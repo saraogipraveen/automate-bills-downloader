@@ -26,27 +26,33 @@ io.on("connection", (socket) => {
 });
 
 function uploadFileHandler(req, res, next) {
-  upload(req, res, (error) => {
-    if (error) {
-      // console.log("multer error : ", error);
-      socketInstance.emit("file-error", "Please provide the excel file.");
-      socketInstance.emit("waiting-for-user");
-    } else {
-      // console.log("uploaded successfully");
-    }
-  });
+  try {
+
+    upload(req, res, (error) => {
+      if (error) {
+        // console.log("multer error : ", error);
+        socketInstance.emit("file-error", "Please provide the excel file.");
+        socketInstance.emit("waiting-for-user");
+      } else {
+        // console.log("uploaded successfully");
+      }
+    });
+  }
+  catch(e){
+  console.log("uploadFileHandler -> e", e)
+  }
   next();
 }
 
 app.post("/file", uploadFileHandler, async (req, res) => {
   //console.log("host : ", req.headers.host);
-
+  try {
   socketInstance.emit("process-started");
   socketInstance.on("response-from-user", function () {
     socketInstance.emit("perform-cleanup");
   });
 
-  try {
+
     let form = new formidable.IncomingForm();
     form.parse(req, async function (err, fields, files) {
       if (err) {
@@ -136,7 +142,7 @@ function removeDir(dirPath) {
 
 
 //Listen to the port
-app.listen(process.env.PORT || 3000, function(){
+http.listen(process.env.PORT || 3000, function(){
   console.log("Express server listening on port %d in %s mode", this.address().port, app.settings.env);
 });
 /*

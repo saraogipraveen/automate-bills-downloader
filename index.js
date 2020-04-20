@@ -80,11 +80,11 @@ async function downloadBills(browser, consumer, unit, inputMonths) {
           // console.log(`TYPE : `, typeof errorMessage);
           // console.log("errorMessage again: ", errorMessage, "\t trimmed : ", errorMessage.trim(), "\t ANSWER", errorMessage.trim() == "Invalid Captcha");
         
-          socket.emit('pdf-error', {message: 'some error occurred', consumer});
-          // if(errorMessage.trim() == "Invalid Captcha" || errorMessage.trim() == "Enter Captcha First")
-          //   await downloadBills(browser, consumer, unit, inputMonths);
-          // else socket.emit('pdf-error', `Error : ${errorMessage}`);
-          // throw Error(await dialog.message());
+          // socket.emit('pdf-error', {message: 'some error occurred', consumer});
+          // socket.on('response-from-user', function(){
+          //   socket.emit('perform-cleanup');
+          // });
+
         });
         return temp;
       })
@@ -140,8 +140,9 @@ async function downloadBills(browser, consumer, unit, inputMonths) {
       )
     );
   } catch (error) {
-    console.log(`MERA ERROR : `, error.message, error);
-    if(error.message == "Evaluation failed")
+    console.log(`error occurred : `, error.message);
+    // if(error.message == "Evaluation failed: TypeError: Cannot read property 'children' of undefined" || 
+    //    error.message == "Navigation timeout of 30000 ms exceeded")
       socket.emit('pdf-error', {message: 'some error occurred', consumer});
     
     
@@ -156,7 +157,6 @@ async function downloadBills(browser, consumer, unit, inputMonths) {
     //   await downloadBills(browser, consumer, unit, inputMonths);
   }
 }
-
 
 function readCaptchaNumber() {
   return new Promise((resolve, reject) => {

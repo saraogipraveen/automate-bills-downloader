@@ -1,6 +1,7 @@
 const fs = require('fs');
 let express = require('express');
 const app = require('express')();
+const path = require('path');
 const http = require('http').createServer(app);
 let io = require('socket.io')(http);
 // const xlsxFile = require('read-excel-file/node');
@@ -11,10 +12,13 @@ let xlsx = require('node-xlsx');
 
 const PORT = 4600;
 
+app.use(express.static('public'));
 app.use(express.urlencoded({extended: true}))
 
+app.use('/img', express.static('public/images/apple-touch-icon.png'));
+
 app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/index.html');
+  // res.sendFile(__dirname + '/index.html');
 });
 let socketInstance = null;
 

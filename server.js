@@ -135,8 +135,10 @@ function removeDir(dirPath) {
 };
 
 
-http.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
-
+//Listen to the port
+app.listen(process.env.PORT || 3000, function(){
+  console.log("Express server listening on port %d in %s mode", this.address().port, app.settings.env);
+});
 /*
 
 170688852041	4636	oct,nov

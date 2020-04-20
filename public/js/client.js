@@ -17,7 +17,7 @@ socket.on("pdf-generated", (arg) => {
   signDiv.classList.add("sign_div");
   let signImg = document.createElement("img");
   signImg.setAttribute("type", "images/svg");
-  signImg.setAttribute("src", "http://localhost:4600/images/check.svg");
+  signImg.setAttribute("src", "images/check.svg");
   signImg.setAttribute("alt", "sign image");
   signDiv.appendChild(signImg);
   let messageDiv = document.createElement("div");
@@ -37,7 +37,7 @@ socket.on("pdf-error", (arg) => {
   signDiv.classList.add("sign_div");
   let signImg = document.createElement("img");
   signImg.setAttribute("type", "images/svg");
-  signImg.setAttribute("src", "http://localhost:4600/images/cross.svg");
+  signImg.setAttribute("src", "images/cross.svg");
   signImg.setAttribute("alt", "sign image");
   signDiv.appendChild(signImg);
   let messageDiv = document.createElement("div");
@@ -54,12 +54,26 @@ function emitResoponseEvent() {
   socket.emit("response-from-user");
 }
 
-socket.on("waiting-for-user", function () {
+socket.on("wait-for-user", function (buttonText) {
+  // alert(buttonText);
+  buttonText = buttonText || "Process Completed";
+
   let button = document.createElement("button");
-  let buttonTextNode = document.createTextNode(`Process Completed`);
   button.classList.add("complete-button");
-  button.appendChild(buttonTextNode);
   button.addEventListener("click", emitResoponseEvent);
+    
+  if(buttonText == "Process Completed")
+  {
+    let buttonTextNode = document.createTextNode(buttonText);
+    button.appendChild(buttonTextNode);
+    document.querySelector("body").appendChild(button);
+  } else {
+    let anchorNode = document.createElement('a');
+    anchorNode.setAttribute("href", "/bills.zip");
+    let anchorTextNode = document.createTextNode(buttonText);
+    anchorNode.appendChild(anchorTextNode);
+    button.appendChild(anchorNode);
+  }
   document.querySelector("body").appendChild(button);
 
   let loader = document.body.querySelector(".lds-hourglass");

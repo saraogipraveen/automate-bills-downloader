@@ -1,10 +1,12 @@
 const fs = require("fs");
+const path = require('path');
 let express = require("express");
 const app = express();
 const http = require("http").createServer(app);
 let io = require("socket.io")(http);
 const formidable = require("formidable");
 const { init, initBrowser } = require("./index");
+const zipFolder = require("zip-a-folder");
 
 const upload = require("./multerConfig");
 let xlsx = require("node-xlsx");
@@ -37,9 +39,8 @@ function uploadFileHandler(req, res, next) {
 }
 
 app.post("/file", uploadFileHandler, async (req, res) => {
-  console.log("host : ", req.headers.host);
+  //console.log("host : ", req.headers.host);
 
-  // #socketInstance.emit("perform-cleanup");
   socketInstance.emit("process-started");
   socketInstance.on("response-from-user", function () {
     socketInstance.emit("perform-cleanup");
@@ -71,15 +72,17 @@ app.post("/file", uploadFileHandler, async (req, res) => {
           await init(rows, browser, io, socketInstance);
           await browser.close();
           deleteFile();
-    
-          socketInstance.emit("waiting-for-user");
+          await generateZippedFolder();
+          // removeDir("./downloads");
+          socketInstance.emit("wait-for-user", "Done! Download bills");
+          res.end();
         } else {
           res.end();
           socketInstance.emit("wait-for-user");
         }
       });
       res.end();
-      socketInstance.emit("wait-for-user");
+      // socketInstance.emit("wait-for-user");
     });
   } catch (error) {
     res.end();
@@ -89,12 +92,48 @@ app.post("/file", uploadFileHandler, async (req, res) => {
 
 function deleteFile() {
   fs.unlinkSync("bills.xlsx", (error) => {
-    if(error) {
-      console.log('unlink error : ', error);
-    }
-    else console.log('file deleted');
-  })
+    if (error) {
+      console.log("unlink error : ", error);
+    } else console.log("file deleted");
+  });
 }
+
+let generateZippedFolder = async () => {
+  await zipFolder.zipFolder("./downloads", "./public/bills.zip", (err) => {
+    if (err) {
+      console.log("some error occurred : ", err.message);
+      return;
+    } else {
+      // console.log("success");
+      removeDir("./downloads");
+      return;
+    }
+  });
+};
+
+
+function removeDir(dirPath) {
+  if (!fs.existsSync(dirPath)) {
+      return;
+  }
+
+  var list = fs.readdirSync(dirPath);
+  for (var i = 0; i < list.length; i++) {
+      var filename = path.join(dirPath, list[i]);
+      var stat = fs.statSync(filename);
+
+      if (filename == "." || filename == "..") {
+          // do nothing for current and parent dir
+      } else if (stat.isDirectory()) {
+          removeDir(filename);
+      } else {
+          fs.unlinkSync(filename);
+      }
+  }
+
+  fs.rmdirSync(dirPath);
+};
+
 
 http.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
 

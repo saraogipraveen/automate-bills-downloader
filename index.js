@@ -23,7 +23,8 @@ async function init(rows, browser, ioInstance, socketInstance) {
     io = ioInstance;
     socket = socketInstance;
     if (rows) {
-      !fs.existsSync(`downloads`) && fs.mkdirSync(`downloads`);
+      // !fs.existsSync(`downloads`) && fs.mkdirSync(`downloads`);
+      fs.mkdirSync("downloads", { recursive: true });
       rows.splice(0, 1);
       Promise.resolve(
         await Promise.resolve(rows).then(
@@ -50,7 +51,7 @@ async function init(rows, browser, ioInstance, socketInstance) {
 
 function readCaptchaNumber() {
   return new Promise((resolve, reject) => {
-    tesseract.process(`${__dirname}/downloads/captcha.png`, function (
+    tesseract.process(`${__dirname}/captcha.png`, function (
       err,
       text
     ) {
@@ -66,7 +67,6 @@ function readCaptchaNumber() {
 async function downloadBills(browser, consumer, unit, inputMonths) {
   try {
     months = inputMonths.trim().split(/\W+/);
-    console.log('months', months);
     const page = await browser.newPage();
     await page.goto("http://wss.mahadiscom.in/wss/wss_view_pay_bill.aspx", {waitUntil:'networkidle2'});
 
@@ -92,7 +92,7 @@ async function downloadBills(browser, consumer, unit, inputMonths) {
     await page.keyboard.press("Tab");
 
     let captcha = await page.$("#captcha");
-    await captcha.screenshot({ path: `${__dirname}/downloads/captcha.png` });
+    await captcha.screenshot({ path: `${__dirname}/captcha.png` });
     const captcha_number = await readCaptchaNumber();
     
     let captchaField = await page.$("#txtInput");
@@ -134,15 +134,12 @@ async function downloadBills(browser, consumer, unit, inputMonths) {
     console.log(`error occurred : `, error.message);
     socket.emit('pdf-error', {message: 'some error occurred', consumer});
 
-    // socket.on('response-from-user', function(){
-    //   socket.emit('perform-cleanup');
-    // });
   }
 }
 
 function readCaptchaNumber() {
   return new Promise((resolve, reject) => {
-    tesseract.process(`${__dirname}/downloads/captcha.png`, function (
+    tesseract.process(`${__dirname}/captcha.png`, function (
       err,
       text
     ) {
@@ -156,8 +153,7 @@ function readCaptchaNumber() {
 }
 
 async function downloadPdf(browser, page, imgid, consumer) {
-  !fs.existsSync(`${__dirname}/downloads/${consumer}`) &&
-    fs.mkdirSync(`${__dirname}/downloads/${consumer}`);
+  fs.mkdirSync(`${__dirname}/downloads/${consumer}`, { recursive: true });
 
   let downloadButton = await page.$(imgid);
 

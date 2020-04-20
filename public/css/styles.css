@@ -138,9 +138,6 @@ li {
   color: white;
   font-size: 1.6rem;
   background: linear-gradient(to right, #0ba360, #3cba92);
-  /* background: linear-gradient(to right, #00B4DB, #0083B0, );  */
-  /* #1f4037, #99f2c8); */
-
   display: flex;
   align-items: center;
 }
@@ -227,4 +224,3 @@ li {
     transform: rotate(1800deg);
   }
 }
-

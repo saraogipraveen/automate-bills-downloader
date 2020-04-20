@@ -50,20 +50,21 @@ socket.on("pdf-error", (arg) => {
   document.querySelector("#error-list").appendChild(li);
 });
 
+function emitResoponseEvent() {
+  socket.emit("response-from-user");
+}
+
 socket.on("waiting-for-user", function () {
   let button = document.createElement("button");
   let buttonTextNode = document.createTextNode(`Process Completed`);
   button.classList.add("complete-button");
   button.appendChild(buttonTextNode);
-  button.addEventListener("click", () => socket.emit("response-from-user"));
+  button.addEventListener("click", emitResoponseEvent);
   document.querySelector("body").appendChild(button);
 
   let loader = document.body.querySelector(".lds-hourglass");
-  loader.parentElement.removeChild(loader);
+  loader && loader.parentElement.removeChild(loader);
 
-  let startButton = document.querySelector("#start");
-  start.classList.remove("disabled");
-  start.disabled = false;
 });
 
 socket.on("file-error", function (error) {
@@ -92,7 +93,9 @@ socket.on("file-error", function (error) {
 socket.on("perform-cleanup", function () {
   let pdfError = document.querySelector("#pdf-error");
   pdfError && pdfError.parentNode.removeChild(pdfError);
+  
   let completeButton = document.querySelector(".complete-button");
+  completeButton && completeButton.removeEventListener("click", emitResoponseEvent);
   completeButton && completeButton.parentNode.removeChild(completeButton);
   let successList = document.querySelector("#success-list");
   if (successList) {
@@ -106,6 +109,10 @@ socket.on("perform-cleanup", function () {
       errorList.removeChild(errorList.childNodes[0]);
     }
   }
+
+  let startButton = document.querySelector("#start");
+  start.classList.remove("disabled");
+  start.disabled = false;
 });
 
 async function uploadFile() {

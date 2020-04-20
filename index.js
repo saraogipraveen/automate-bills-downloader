@@ -22,7 +22,6 @@ async function init(rows, browser, ioInstance, socketInstance) {
   try {
     io = ioInstance;
     socket = socketInstance;
-    // socket.emit('new-event', {new: 'new'});
     if (rows) {
       !fs.existsSync(`downloads`) && fs.mkdirSync(`downloads`);
       rows.splice(0, 1);
@@ -77,14 +76,6 @@ async function downloadBills(browser, consumer, unit, inputMonths) {
           console.log("inside dialog : ", await dialog.message());
           let errorMessage = await dialog.message();
           res = await dialog.dismiss();
-          // console.log(`TYPE : `, typeof errorMessage);
-          // console.log("errorMessage again: ", errorMessage, "\t trimmed : ", errorMessage.trim(), "\t ANSWER", errorMessage.trim() == "Invalid Captcha");
-        
-          // socket.emit('pdf-error', {message: 'some error occurred', consumer});
-          // socket.on('response-from-user', function(){
-          //   socket.emit('perform-cleanup');
-          // });
-
         });
         return temp;
       })
@@ -141,20 +132,11 @@ async function downloadBills(browser, consumer, unit, inputMonths) {
     );
   } catch (error) {
     console.log(`error occurred : `, error.message);
-    // if(error.message == "Evaluation failed: TypeError: Cannot read property 'children' of undefined" || 
-    //    error.message == "Navigation timeout of 30000 ms exceeded")
-      socket.emit('pdf-error', {message: 'some error occurred', consumer});
-    
-    
-    socket.on('response-from-user', function(){
-      socket.emit('perform-cleanup');
-    });
-      // socket.emit('pdf-error', {message: 'some error occurred', consumer});
-    // if (
-    //   error.message !=
-    //   `Given combination of consumer number ,consumer type and BU do not match`
-    // )
-    //   await downloadBills(browser, consumer, unit, inputMonths);
+    socket.emit('pdf-error', {message: 'some error occurred', consumer});
+
+    // socket.on('response-from-user', function(){
+    //   socket.emit('perform-cleanup');
+    // });
   }
 }
 

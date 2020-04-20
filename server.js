@@ -1,91 +1,102 @@
-const fs = require('fs');
-let express = require('express');
-const app = require('express')();
-const path = require('path');
-const http = require('http').createServer(app);
-let io = require('socket.io')(http);
-// const xlsxFile = require('read-excel-file/node');
-const { init, initBrowser } = require('./index');
-const formidable = require('formidable')
+const fs = require("fs");
+let express = require("express");
+const app = express();
+const http = require("http").createServer(app);
+let io = require("socket.io")(http);
+const formidable = require("formidable");
+const { init, initBrowser } = require("./index");
 
-let xlsx = require('node-xlsx');
-
+const upload = require("./multerConfig");
+let xlsx = require("node-xlsx");
+let socketInstance = null;
 const PORT = 4600;
 
-app.use(express.static('public'));
-app.use(express.urlencoded({extended: true}))
+app.use(express.static("public"));
+app.use(express.urlencoded({ extended: true }));
 
-app.use('/img', express.static('public/images/apple-touch-icon.png'));
-
-app.get('/', (req, res) => {
+app.get("/", (req, res) => {
   // res.sendFile(__dirname + '/index.html');
 });
-let socketInstance = null;
 
-io.on('connection', socket => {
+io.on("connection", (socket) => {
   socketInstance = socket;
-  // socketInstance.emit('new-event', {new: 'new'});
-  console.log('a user connected');
-})
+  console.log("a user connected");
+});
 
-app.post('/file', async (req, res) => {
-  socketInstance.emit('perform-cleanup');
-  socketInstance.emit('process-started');
-  
-  console.log(req.body);
+function uploadFileHandler(req, res, next) {
+  upload(req, res, (error) => {
+    if (error) {
+      // console.log("multer error : ", error);
+      socketInstance.emit("file-error", "Please provide the excel file.");
+      socketInstance.emit("waiting-for-user");
+    } else {
+      // console.log("uploaded successfully");
+    }
+  });
+  next();
+}
+
+app.post("/file", uploadFileHandler, async (req, res) => {
+  console.log("host : ", req.headers.host);
+
+  // #socketInstance.emit("perform-cleanup");
+  socketInstance.emit("process-started");
+  socketInstance.on("response-from-user", function () {
+    socketInstance.emit("perform-cleanup");
+  });
+
   try {
     let form = new formidable.IncomingForm();
     form.parse(req, async function (err, fields, files) {
-      console.log('files', files);
       if (err) {
-        // Check for and handle any errors here.
         console.error(err.message);
         return;
       }
       let excel = files.excel;
-      // let download_path = fields.downloadPath;
 
-      if(!excel) {
-        socketInstance.emit('file-error', 'Please provide the excel file.');
-        socketInstance.emit('waiting-for-user');
-        socketInstance.on('response-from-user', function(){
-          socketInstance.emit('perform-cleanup');
-        });
+      if (!excel) {
+        socketInstance.emit("file-error", "Please select the input file.");
+        socketInstance.emit("waiting-for-user");
         res.end();
       }
 
-      console.log("excel", excel)
-      console.log("excel.name", excel.name)
       let rows = null;
-      // fs.exists(__dirname + `/${excel.name}`, function (exists) {
-      fs.exists(`${excel.name}`, async function (exists) {
+
+      fs.exists(__dirname + "/bills.xlsx", async function (exists) {
         if (exists) {
-          let obj = xlsx.parse(__dirname + `/${excel.name}`);
-          rows = obj[0].data.filter(row => row.length >= 1);
+          let obj = xlsx.parse(__dirname + "/bills.xlsx");
+          rows = obj[0].data.filter((row) => row.length >= 1);
           console.table(rows);
           let browser = await initBrowser();
           await init(rows, browser, io, socketInstance);
           await browser.close();
-          io.emit('waiting-for-user');
-          socketInstance.on('response-from-user', function(){
-            socketInstance.emit('perform-cleanup');
-          });
+          deleteFile();
+    
+          socketInstance.emit("waiting-for-user");
+        } else {
+          res.end();
+          socketInstance.emit("wait-for-user");
         }
-        else {
-          console.log(`file doesn't exist`);
-        }
-      })
+      });
       res.end();
-    })
-  }
-  catch (error) {
-    console.error('ERROR GEN : ', error.message);
+      socketInstance.emit("wait-for-user");
+    });
+  } catch (error) {
     res.end();
+    socketInstance.emit("wait-for-user");
   }
-})
+});
+
+function deleteFile() {
+  fs.unlinkSync("bills.xlsx", (error) => {
+    if(error) {
+      console.log('unlink error : ', error);
+    }
+    else console.log('file deleted');
+  })
+}
 
 http.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
-
 
 /*
 
@@ -100,4 +111,4 @@ http.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
 
 */
 
-module.exports = { io }
+module.exports = { io };

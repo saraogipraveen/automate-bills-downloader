@@ -3,7 +3,7 @@ let express = require('express');
 const app = require('express')();
 const http = require('http').createServer(app);
 let io = require('socket.io')(http);
-const xlsxFile = require('read-excel-file/node');
+// const xlsxFile = require('read-excel-file/node');
 const { init, initBrowser } = require('./index');
 const formidable = require('formidable')
 
@@ -27,10 +27,12 @@ io.on('connection', socket => {
 app.post('/file', async (req, res) => {
   socketInstance.emit('perform-cleanup');
   socketInstance.emit('process-started');
+  
   console.log(req.body);
   try {
     let form = new formidable.IncomingForm();
     form.parse(req, async function (err, fields, files) {
+      console.log('files', files);
       if (err) {
         // Check for and handle any errors here.
         console.error(err.message);
@@ -54,7 +56,7 @@ app.post('/file', async (req, res) => {
       // fs.exists(__dirname + `/${excel.name}`, function (exists) {
       fs.exists(`${excel.name}`, async function (exists) {
         if (exists) {
-          var obj = xlsx.parse(__dirname + `/${excel.name}`);
+          let obj = xlsx.parse(__dirname + `/${excel.name}`);
           rows = obj[0].data.filter(row => row.length >= 1);
           console.table(rows);
           let browser = await initBrowser();

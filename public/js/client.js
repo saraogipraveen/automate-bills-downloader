@@ -54,8 +54,7 @@ function emitResoponseEvent() {
   socket.emit("response-from-user");
 }
 
-socket.on("wait-for-user", function (buttonText) {
-  // alert(buttonText);
+socket.on("wait-for-user", function (buttonText, name) {
   buttonText = buttonText || "Process Completed";
 
   let button = document.createElement("button");
@@ -68,8 +67,13 @@ socket.on("wait-for-user", function (buttonText) {
     button.appendChild(buttonTextNode);
     document.querySelector("body").appendChild(button);
   } else {
+    button.style.padding = "0";
     let anchorNode = document.createElement('a');
-    anchorNode.setAttribute("href", "/bills.zip");
+    anchorNode.addEventListener('onclick', emitResoponseEvent);
+    // #anchorNode.setAttribute("href", `/${name}.zip`);
+    anchorNode.setAttribute("href", `/bills.zip`);
+    anchorNode.style.display = "inline-block";
+    anchorNode.style.padding = "1rem 1.6rem";
     let anchorTextNode = document.createTextNode(buttonText);
     anchorNode.appendChild(anchorTextNode);
     button.appendChild(anchorNode);
@@ -91,7 +95,7 @@ socket.on("file-error", function (error) {
   signDiv.classList.add("sign_div");
   let signImg = document.createElement("img");
   signImg.setAttribute("type", "images/svg");
-  signImg.setAttribute("src", "http://localhost:4600/images/cross.svg");
+  signImg.setAttribute("src", "/images/cross.svg");
   signImg.setAttribute("alt", "sign image");
   signDiv.appendChild(signImg);
   let messageDiv = document.createElement("div");
@@ -108,8 +112,16 @@ socket.on("perform-cleanup", function () {
   let pdfError = document.querySelector("#pdf-error");
   pdfError && pdfError.parentNode.removeChild(pdfError);
   
+  let fileInput = document.querySelector("input[type='file'");
+  let emptyFile = document.createElement('input');
+  emptyFile.type = 'file';
+  fileInput.files = emptyFile.files;
+  
+
   let completeButton = document.querySelector(".complete-button");
   completeButton && completeButton.removeEventListener("click", emitResoponseEvent);
+  let anchorNode = document.querySelector('a');
+  anchorNode && anchorNode.removeEventListener("onclick", emitResoponseEvent);
   completeButton && completeButton.parentNode.removeChild(completeButton);
   let successList = document.querySelector("#success-list");
   if (successList) {
@@ -133,7 +145,6 @@ async function uploadFile() {
   let formData = new FormData();
   let excel = document.getElementById("excel_file").files[0];
   formData.append("excel", excel);
-  // formData.append("downloadPath", downloadPath);
 
   try {
     let r = await fetch("/file", { method: "POST", body: formData });

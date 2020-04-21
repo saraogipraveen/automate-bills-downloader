@@ -1,5 +1,5 @@
 const fs = require("fs");
-const path = require('path');
+const path = require("path");
 let express = require("express");
 const app = express();
 const http = require("http").createServer(app);
@@ -27,31 +27,28 @@ io.on("connection", (socket) => {
 
 function uploadFileHandler(req, res, next) {
   try {
-
     upload(req, res, (error) => {
       if (error) {
-        // console.log("multer error : ", error);
+        console.log("multer error : ", error);
         socketInstance.emit("file-error", "Please provide the excel file.");
-        socketInstance.emit("waiting-for-user");
+        socketInstance.emit("wait-for-user");
       } else {
         // console.log("uploaded successfully");
       }
     });
-  }
-  catch(e){
-  console.log("uploadFileHandler -> e", e)
+  } catch (e) {
+    console.log("uploadFileHandler -> e", e);
   }
   next();
 }
 
 app.post("/file", uploadFileHandler, async (req, res) => {
-  //console.log("host : ", req.headers.host);
   try {
-  socketInstance.emit("process-started");
-  socketInstance.on("response-from-user", function () {
-    socketInstance.emit("perform-cleanup");
-  });
-
+    socketInstance.emit("process-started");
+    deleteFile("./public/bills.zip");
+    socketInstance.on("response-from-user", function () {
+      socketInstance.emit("perform-cleanup");
+    });
 
     let form = new formidable.IncomingForm();
     form.parse(req, async function (err, fields, files) {
@@ -63,8 +60,8 @@ app.post("/file", uploadFileHandler, async (req, res) => {
 
       if (!excel) {
         socketInstance.emit("file-error", "Please select the input file.");
-        socketInstance.emit("waiting-for-user");
-        res.end();
+        socketInstance.emit("wait-for-user");
+        return res.end();
       }
 
       let rows = null;
@@ -77,35 +74,36 @@ app.post("/file", uploadFileHandler, async (req, res) => {
           let browser = await initBrowser();
           await init(rows, browser, io, socketInstance);
           await browser.close();
-          deleteFile();
-          await generateZippedFolder();
-          // removeDir("./downloads");
-          socketInstance.emit("wait-for-user", "Done! Download bills");
-          res.end();
+          deleteFile("bills.xlsx");
+          await generateZippedFolder(excel.name.split('.')[0]);
+          socketInstance.emit("wait-for-user", "Done! Download bills", excel.name.split('.')[0]);
+          return res.end();
         } else {
-          res.end();
-          socketInstance.emit("wait-for-user");
+          return res.end();
         }
       });
-      res.end();
-      // socketInstance.emit("wait-for-user");
+      return res.end();
     });
   } catch (error) {
-    res.end();
-    socketInstance.emit("wait-for-user");
+    return res.end();
   }
 });
 
-function deleteFile() {
-  fs.unlinkSync("bills.xlsx", (error) => {
-    if (error) {
-      console.log("unlink error : ", error);
-    } else console.log("file deleted");
-  });
+function deleteFile(path) {
+  if (fs.existsSync(path)) {
+    fs.unlinkSync(path, (error) => {
+      if (error) {
+        console.log("unlink error : ", error);
+      } else console.log("file deleted");
+    });
+  } else {
+    console.log("File : " + path + " doesn't exists.");
+  }
 }
 
-let generateZippedFolder = async () => {
-  await zipFolder.zipFolder("./downloads", "./public/bills.zip", (err) => {
+let generateZippedFolder = async (name) => {
+  // #await zipFolder.zipFolder("./downloads", `./public/${name}.zip`, (err) => {
+  await zipFolder.zipFolder("./downloads", `./public/bills.zip`, (err) => {
     if (err) {
       console.log("some error occurred : ", err.message);
       return;
@@ -117,45 +115,35 @@ let generateZippedFolder = async () => {
   });
 };
 
-
 function removeDir(dirPath) {
   if (!fs.existsSync(dirPath)) {
-      return;
+    return;
   }
 
   var list = fs.readdirSync(dirPath);
   for (var i = 0; i < list.length; i++) {
-      var filename = path.join(dirPath, list[i]);
-      var stat = fs.statSync(filename);
+    var filename = path.join(dirPath, list[i]);
+    var stat = fs.statSync(filename);
 
-      if (filename == "." || filename == "..") {
-          // do nothing for current and parent dir
-      } else if (stat.isDirectory()) {
-          removeDir(filename);
-      } else {
-          fs.unlinkSync(filename);
-      }
+    if (filename == "." || filename == "..") {
+      // do nothing for current and parent dir
+    } else if (stat.isDirectory()) {
+      removeDir(filename);
+    } else {
+      fs.unlinkSync(filename);
+    }
   }
 
   fs.rmdirSync(dirPath);
-};
-
+}
 
 //Listen to the port
-http.listen(process.env.PORT || 3000, function(){
-  console.log("Express server listening on port %d in %s mode", this.address().port, app.settings.env);
+http.listen(process.env.PORT || 3000, function () {
+  console.log(
+    "Express server listening on port %d in %s mode",
+    this.address().port,
+    app.settings.env
+  );
 });
-/*
-
-170688852041	4636	oct,nov
-170688852075	4636	jan,mar
-170688859011	4636	dec,feb
-170675839380	4636	jan,nov
-170688851648	4636	sep,may
-170688856313	4636	may,apr
-170688859029	4636	dec,mar
-170688852059	4636	nov,aug
-
-*/
 
 module.exports = { io };

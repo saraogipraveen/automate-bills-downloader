@@ -12,13 +12,24 @@
 </head>
 
 <body>
+    <div class="info-modal hide-modal">
+        <span class="close-button" onclick="toggleModal()">&times;</span>
+        <h1 style="color: white; margin-bottom: 1rem;">Instructions</h1>
+        <li class="error">Please provide only excel file as input</li>
+        <li class="error">After the process completion it will provide the summary of the successfull &
+            unsuccessfull operation.
+        </li>
+    </div>
     <nav>
-        <img src="images/apple-touch-icon.png" alt="logo" class="logo">
-        <span>Electricity Bill Downloader
-        </span>
+        <div class="nav-des">
+            <img src="images/apple-touch-icon.png" alt="logo" class="logo">
+            <span>Electricity Bill Downloader
+            </span>
+        </div>
+        <button class="info-button" onclick="toggleModal()">Instructions</button>
     </nav>
     <div class="nav-bottom"></div>
-    
+
     <div class="container">
         <input type="file" name="excel" id="excel_file">
         <button id="start" onclick="uploadFile()">Start Downloading</button>

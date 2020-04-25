@@ -1,5 +1,13 @@
 var socket = io();
 
+function toggleModal() {
+  let modal = document.querySelector(".info-modal");
+  let startButton = document.querySelector("#start");
+  startButton.classList.toggle("disabled");
+  startButton.disabled = !startButton.disabled;
+  modal.classList.toggle("hide-modal");
+}
+
 socket.on("process-started", function () {
   let loader = document.createElement("div");
   loader.classList.add("lds-hourglass");
@@ -9,6 +17,10 @@ socket.on("process-started", function () {
   let startButton = document.querySelector("#start");
   startButton.classList.add("disabled");
   startButton.disabled = true;
+
+  let infoButton = document.querySelector(".info-button");
+  infoButton.classList.add("disabled");
+  infoButton.disabled = true;
 });
 
 socket.on("pdf-generated", (arg) => {
@@ -60,17 +72,17 @@ socket.on("wait-for-user", function (buttonText, name) {
   let button = document.createElement("button");
   button.classList.add("complete-button");
   button.addEventListener("click", emitResoponseEvent);
-    
-  if(buttonText == "Process Completed")
-  {
+
+  if (buttonText == "Process Completed") {
     let buttonTextNode = document.createTextNode(buttonText);
     button.appendChild(buttonTextNode);
     document.querySelector("body").appendChild(button);
   } else {
     button.style.padding = "0";
-    let anchorNode = document.createElement('a');
-    anchorNode.addEventListener('onclick', emitResoponseEvent);
+    let anchorNode = document.createElement("a");
+    anchorNode.addEventListener("onclick", emitResoponseEvent);
     anchorNode.setAttribute("href", `/bills.zip`);
+    button.classList.add("download");
     anchorNode.style.display = "inline-block";
     anchorNode.style.padding = "1rem 1.6rem";
     let anchorTextNode = document.createTextNode(buttonText);
@@ -81,7 +93,6 @@ socket.on("wait-for-user", function (buttonText, name) {
 
   let loader = document.body.querySelector(".lds-hourglass");
   loader && loader.parentElement.removeChild(loader);
-
 });
 
 socket.on("file-error", function (error) {
@@ -110,16 +121,16 @@ socket.on("file-error", function (error) {
 socket.on("perform-cleanup", function () {
   let pdfError = document.querySelector("#pdf-error");
   pdfError && pdfError.parentNode.removeChild(pdfError);
-  
+
   let fileInput = document.querySelector("input[type='file'");
-  let emptyFile = document.createElement('input');
-  emptyFile.type = 'file';
+  let emptyFile = document.createElement("input");
+  emptyFile.type = "file";
   fileInput.files = emptyFile.files;
-  
 
   let completeButton = document.querySelector(".complete-button");
-  completeButton && completeButton.removeEventListener("click", emitResoponseEvent);
-  let anchorNode = document.querySelector('a');
+  completeButton &&
+    completeButton.removeEventListener("click", emitResoponseEvent);
+  let anchorNode = document.querySelector("a");
   anchorNode && anchorNode.removeEventListener("onclick", emitResoponseEvent);
   completeButton && completeButton.parentNode.removeChild(completeButton);
   let successList = document.querySelector("#success-list");
@@ -138,6 +149,10 @@ socket.on("perform-cleanup", function () {
   let startButton = document.querySelector("#start");
   startButton.classList.remove("disabled");
   startButton.disabled = false;
+
+  let infoButton = document.querySelector(".info-button");
+  infoButton.classList.remove("disabled");
+  infoButton.disabled = false;
 });
 
 async function uploadFile() {

@@ -32,9 +32,7 @@ function uploadFileHandler(req, res, next) {
         console.log("multer error : ", error);
         socketInstance.emit("file-error", "Please provide the excel file.");
         socketInstance.emit("wait-for-user");
-      } else {
-        // console.log("uploaded successfully");
-      }
+      } 
     });
   } catch (e) {
     console.log("uploadFileHandler -> e", e);
@@ -102,13 +100,11 @@ function deleteFile(path) {
 }
 
 let generateZippedFolder = async (name) => {
-  // #await zipFolder.zipFolder("./downloads", `./public/${name}.zip`, (err) => {
   await zipFolder.zipFolder("./downloads", `./public/bills.zip`, (err) => {
     if (err) {
       console.log("some error occurred : ", err.message);
       return;
     } else {
-      // console.log("success");
       removeDir("./downloads");
       return;
     }

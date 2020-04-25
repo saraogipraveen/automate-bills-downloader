@@ -7,8 +7,8 @@ socket.on("process-started", function () {
   document.body.appendChild(loader);
 
   let startButton = document.querySelector("#start");
-  start.classList.add("disabled");
-  start.disabled = true;
+  startButton.classList.add("disabled");
+  startButton.disabled = true;
 });
 
 socket.on("pdf-generated", (arg) => {
@@ -70,7 +70,6 @@ socket.on("wait-for-user", function (buttonText, name) {
     button.style.padding = "0";
     let anchorNode = document.createElement('a');
     anchorNode.addEventListener('onclick', emitResoponseEvent);
-    // #anchorNode.setAttribute("href", `/${name}.zip`);
     anchorNode.setAttribute("href", `/bills.zip`);
     anchorNode.style.display = "inline-block";
     anchorNode.style.padding = "1rem 1.6rem";
@@ -137,8 +136,8 @@ socket.on("perform-cleanup", function () {
   }
 
   let startButton = document.querySelector("#start");
-  start.classList.remove("disabled");
-  start.disabled = false;
+  startButton.classList.remove("disabled");
+  startButton.disabled = false;
 });
 
 async function uploadFile() {

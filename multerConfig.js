@@ -15,13 +15,13 @@ function fileFilter(req, file, cb) {
 
   // Check ext
   const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-  // const mimetype = filetypes.test(file.mimetype);
   
-  //.xslx -  application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
-  //.xls - application/vnd.ms-excel
-  //.xlsm - application/vnd.ms-excel.sheet.macroEnabled.12
+  /*
+    .xslx -  application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+    .xls - application/vnd.ms-excel
+    .xlsm - application/vnd.ms-excel.sheet.macroEnabled.12
+  */
 
-  // if (mimetype && extname) {
   if(extname) {
     return cb(null, true);
   } else {

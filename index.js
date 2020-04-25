@@ -4,7 +4,6 @@ const each = require("promise-each");
 const fs = require("fs");
 let io = null;
 let socket = null;
-let errorMessage = null;
 const EventEmitter = require("events");
 
 let myEventEmitter = new EventEmitter();
@@ -23,7 +22,6 @@ async function init(rows, browser, ioInstance, socketInstance) {
     io = ioInstance;
     socket = socketInstance;
     if (rows) {
-      // !fs.existsSync(`downloads`) && fs.mkdirSync(`downloads`);
       fs.mkdirSync("downloads", { recursive: true });
       rows.splice(0, 1);
       Promise.resolve(
@@ -122,7 +120,9 @@ async function downloadBills(browser, consumer, unit, inputMonths) {
       }
       return ids;
     }, months);
-
+    if(!img_ids.length)
+      socket.emit('pdf-error', {message: 'some error occurred', consumer});
+    
     await Promise.resolve(
       await Promise.resolve(img_ids).then(
         each(async (imgid) => {
@@ -170,7 +170,8 @@ async function downloadPdf(browser, page, imgid, consumer) {
   let billMonth = await newPage.evaluate(() => {
     return document.getElementById("billMonth").innerText;
   });
-  const printButtonContainer = await newPage.$(".printButtonContainer button");
+  
+  await newPage.$(".printButtonContainer button");
   
   await newPage.emulateMedia("print");
   let pdfOptions = {

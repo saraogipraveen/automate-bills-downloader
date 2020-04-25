@@ -1,5 +1,13 @@
 var socket = io();
 
+function toggleModal() {
+  let modal = document.querySelector(".info-modal");
+  let startButton = document.querySelector("#start");
+  startButton.classList.toggle("disabled");
+  startButton.disabled = !startButton.disabled;
+  modal.classList.toggle("hide-modal");
+}
+
 socket.on("process-started", function () {
   let loader = document.createElement("div");
   loader.classList.add("lds-hourglass");
@@ -7,8 +15,12 @@ socket.on("process-started", function () {
   document.body.appendChild(loader);
 
   let startButton = document.querySelector("#start");
-  start.classList.add("disabled");
-  start.disabled = true;
+  startButton.classList.add("disabled");
+  startButton.disabled = true;
+
+  let infoButton = document.querySelector(".info-button");
+  infoButton.classList.add("disabled");
+  infoButton.disabled = true;
 });
 
 socket.on("pdf-generated", (arg) => {
@@ -54,22 +66,25 @@ function emitResoponseEvent() {
   socket.emit("response-from-user");
 }
 
-socket.on("wait-for-user", function (buttonText) {
-  // alert(buttonText);
+socket.on("wait-for-user", function (buttonText, name) {
   buttonText = buttonText || "Process Completed";
 
   let button = document.createElement("button");
   button.classList.add("complete-button");
   button.addEventListener("click", emitResoponseEvent);
-    
-  if(buttonText == "Process Completed")
-  {
+
+  if (buttonText == "Process Completed") {
     let buttonTextNode = document.createTextNode(buttonText);
     button.appendChild(buttonTextNode);
     document.querySelector("body").appendChild(button);
   } else {
-    let anchorNode = document.createElement('a');
-    anchorNode.setAttribute("href", "/bills.zip");
+    button.style.padding = "0";
+    let anchorNode = document.createElement("a");
+    anchorNode.addEventListener("onclick", emitResoponseEvent);
+    anchorNode.setAttribute("href", `/bills.zip`);
+    button.classList.add("download");
+    anchorNode.style.display = "inline-block";
+    anchorNode.style.padding = "1rem 1.6rem";
     let anchorTextNode = document.createTextNode(buttonText);
     anchorNode.appendChild(anchorTextNode);
     button.appendChild(anchorNode);
@@ -78,7 +93,6 @@ socket.on("wait-for-user", function (buttonText) {
 
   let loader = document.body.querySelector(".lds-hourglass");
   loader && loader.parentElement.removeChild(loader);
-
 });
 
 socket.on("file-error", function (error) {
@@ -91,7 +105,7 @@ socket.on("file-error", function (error) {
   signDiv.classList.add("sign_div");
   let signImg = document.createElement("img");
   signImg.setAttribute("type", "images/svg");
-  signImg.setAttribute("src", "http://localhost:4600/images/cross.svg");
+  signImg.setAttribute("src", "/images/cross.svg");
   signImg.setAttribute("alt", "sign image");
   signDiv.appendChild(signImg);
   let messageDiv = document.createElement("div");
@@ -107,9 +121,17 @@ socket.on("file-error", function (error) {
 socket.on("perform-cleanup", function () {
   let pdfError = document.querySelector("#pdf-error");
   pdfError && pdfError.parentNode.removeChild(pdfError);
-  
+
+  let fileInput = document.querySelector("input[type='file'");
+  let emptyFile = document.createElement("input");
+  emptyFile.type = "file";
+  fileInput.files = emptyFile.files;
+
   let completeButton = document.querySelector(".complete-button");
-  completeButton && completeButton.removeEventListener("click", emitResoponseEvent);
+  completeButton &&
+    completeButton.removeEventListener("click", emitResoponseEvent);
+  let anchorNode = document.querySelector("a");
+  anchorNode && anchorNode.removeEventListener("onclick", emitResoponseEvent);
   completeButton && completeButton.parentNode.removeChild(completeButton);
   let successList = document.querySelector("#success-list");
   if (successList) {
@@ -125,15 +147,18 @@ socket.on("perform-cleanup", function () {
   }
 
   let startButton = document.querySelector("#start");
-  start.classList.remove("disabled");
-  start.disabled = false;
+  startButton.classList.remove("disabled");
+  startButton.disabled = false;
+
+  let infoButton = document.querySelector(".info-button");
+  infoButton.classList.remove("disabled");
+  infoButton.disabled = false;
 });
 
 async function uploadFile() {
   let formData = new FormData();
   let excel = document.getElementById("excel_file").files[0];
   formData.append("excel", excel);
-  // formData.append("downloadPath", downloadPath);
 
   try {
     let r = await fetch("/file", { method: "POST", body: formData });

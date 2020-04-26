@@ -14,6 +14,7 @@ myEventEmitter.on("pdf-generated", (label, customer) => {
 
 async function initBrowser() {
   const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
+  browser.on("disconnected", initBrowser);
   return browser;
 }
 
@@ -33,8 +34,11 @@ async function init(rows, browser, ioInstance, socketInstance) {
             if (consumer.length == 11) consumer = `0${consumer}`;
             unit = `${unit}`;
             if (unit.length == 3) unit = `0${unit}`;
-            inputMonths = inputMonths || "jan";
-            await downloadBills(browser, consumer, unit, inputMonths);
+            if(!inputMonths) {
+              socket.emit('pdf-error', `please provide months detail to download pdf for consumer ${consumer}`);
+            }
+            else
+              await downloadBills(browser, consumer, unit, inputMonths);
           })
         )
       );
@@ -65,6 +69,7 @@ function readCaptchaNumber() {
 async function downloadBills(browser, consumer, unit, inputMonths) {
   try {
     months = inputMonths.trim().split(/\W+/);
+    months = months.map(month => month.toLowerCase());
     const page = await browser.newPage();
     await page.goto("http://wss.mahadiscom.in/wss/wss_view_pay_bill.aspx", {waitUntil:'networkidle2'});
 
@@ -78,7 +83,6 @@ async function downloadBills(browser, consumer, unit, inputMonths) {
         return temp;
       })
     );
-
     const consumerEl = await page.$("#consumerNo");
     consumerEl.focus();
     await page.keyboard.type(consumer);
@@ -105,23 +109,29 @@ async function downloadBills(browser, consumer, unit, inputMonths) {
 
     await page.waitForSelector("#grdCustBillingDetails");
 
-    const img_ids = await page.evaluate((months) => {
+    const output = await page.evaluate((months) => {
       let trs = Array.from(
         document.querySelectorAll("#grdCustBillingDetails tr")
       );
       const ids = [];
+      const generatedMonths = [];
       for (let m of months) {
         trs.map((tr) => {
           let td = tr.querySelectorAll("td");
           if (td.length && td[0].innerText.toLowerCase().indexOf(m) > -1) {
             ids.push(`#${td[6].children[1].id}`);
+            generatedMonths.push(m);
           }
         });
       }
-      return ids;
+      return [ids, generatedMonths];
     }, months);
-    if(!img_ids.length)
-      socket.emit('pdf-error', {message: 'some error occurred', consumer});
+    const [img_ids, outputMonths] = output;
+    console.log(outputMonths);
+    months.map(month => {
+      if(!(outputMonths.includes(month)))
+        socket.emit('pdf-error', `Record for ${month} doesn't exists for consumer ${consumer}`)
+    })
     
     await Promise.resolve(
       await Promise.resolve(img_ids).then(
@@ -132,7 +142,7 @@ async function downloadBills(browser, consumer, unit, inputMonths) {
     );
   } catch (error) {
     console.log(`error occurred : `, error.message);
-    socket.emit('pdf-error', {message: 'some error occurred', consumer});
+    socket.emit('pdf-error', `some error occurred while downloading pdf for consumer ${consumer}`);
 
   }
 }

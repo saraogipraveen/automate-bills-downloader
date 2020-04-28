@@ -54,6 +54,7 @@ nav > span {
 }
 
 .info-modal {
+  width: 70vw;
   transition: top .5s;
   border-radius: .4rem;
   z-index: 40;
@@ -68,10 +69,6 @@ nav > span {
 }
 .hide-modal {
   top: -250rem;
-}
-
-.info-modal > li {
-  width: 42.5rem;
 }
 
 .close-button {
@@ -90,6 +87,10 @@ nav > span {
   display: flex;
   justify-content: start;
   width: 100%;    
+}
+
+.excel-demo-container > img {
+  width: 100%;
 }
 
 .container {
@@ -238,14 +239,6 @@ li {
   .info-modal {
     width: 95vw;
     padding: 1.5rem;
-  }
-
-  .info-modal > li {
-    width: 100%;
-  }
-
-  .excel-demo-container > img {
-    width: 100%;
   }
 
   .nav-des {

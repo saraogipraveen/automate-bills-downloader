@@ -79,7 +79,7 @@ socket.on("wait-for-user", function (buttonText, name) {
     button.style.padding = "0";
     let anchorNode = document.createElement("a");
     anchorNode.addEventListener("onclick", emitResoponseEvent);
-    anchorNode.setAttribute("href", `/bills.zip`);
+    anchorNode.setAttribute("href", `/generated_-_bills.zip`);
     button.classList.add("download");
     anchorNode.style.display = "inline-block";
     anchorNode.style.padding = "1rem 1.6rem";

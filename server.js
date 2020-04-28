@@ -5,8 +5,12 @@ const app = express();
 const http = require("http").createServer(app);
 let io = require("socket.io")(http);
 const formidable = require("formidable");
-const { init, initBrowser } = require("./index");
+const { init, initBrowser, setupExcelError } = require("./index");
 const zipFolder = require("zip-a-folder");
+let excelErrorObj = {
+  isErrorOccurred: false,
+  data: `consumer\tunit\tmonths\n`
+}
 
 const upload = require("./multerConfig");
 let xlsx = require("node-xlsx");
@@ -30,7 +34,7 @@ function uploadFileHandler(req, res, next) {
     upload(req, res, (error) => {
       if (error) {
         console.log("multer error : ", error);
-        socketInstance.emit("file-error", "Please provide the excel file.");
+        socketInstance.emit("file-error", "Please provide the excel file (with .xlsx extention only).");
         socketInstance.emit("wait-for-user");
       } 
     });
@@ -43,7 +47,7 @@ function uploadFileHandler(req, res, next) {
 app.post("/file", uploadFileHandler, async (req, res) => {
   try {
     socketInstance.emit("process-started");
-    deleteFile("./public/bills.zip");
+    deleteFile("./public/generated_-_bills.zip");
     socketInstance.on("response-from-user", function () {
       socketInstance.emit("perform-cleanup");
     });
@@ -64,16 +68,22 @@ app.post("/file", uploadFileHandler, async (req, res) => {
 
       let rows = null;
 
-      fs.exists(__dirname + "/bills.xlsx", async function (exists) {
+      fs.exists(__dirname + "/generated_-_bills.xlsx", async function (exists) {
         if (exists) {
-          let obj = xlsx.parse(__dirname + "/bills.xlsx");
+          let obj = xlsx.parse(__dirname + "/generated_-_bills.xlsx");
           rows = obj[0].data.filter((row) => row.length >= 1);
           console.table(rows);
           let browser = await initBrowser();
+          await setupExcelError(excelErrorObj);
           await init(rows, browser, io, socketInstance);
           await browser.close();
-          deleteFile("bills.xlsx");
-          await generateZippedFolder(excel.name.split('.')[0]);
+          console.log('data : ' , excelErrorObj.data);
+          let writeStream = fs.createWriteStream('./downloads/failed_-_bills.xls');
+          writeStream.write(excelErrorObj.data);
+          writeStream.close();
+          excelErrorObj.data = `consumer\tunit\tmonths\n`;
+          deleteFile("generated_-_bills.xlsx");
+          await generateZippedFolder();
           socketInstance.emit("wait-for-user", "Done! Download bills", excel.name.split('.')[0]);
           return res.end();
         } else {
@@ -99,8 +109,8 @@ function deleteFile(path) {
   }
 }
 
-let generateZippedFolder = async (name) => {
-  await zipFolder.zipFolder("./downloads", `./public/bills.zip`, (err) => {
+let generateZippedFolder = async () => {
+  await zipFolder.zipFolder("./downloads", `./public/generated_-_bills.zip`, (err) => {
     if (err) {
       console.log("some error occurred : ", err.message);
       return;

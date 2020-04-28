@@ -4,14 +4,14 @@ const path = require("path");
 var storage = multer.diskStorage({
   destination: ".",
   filename: function (req, file, cb) {
-    cb(null, `bills.${file.originalname.split('.')[1]}`);
+    cb(null, `generated_-_bills.${file.originalname.split('.')[1]}`);
   },
 });
 
 function fileFilter(req, file, cb) {
 
   // Allowed ext
-  const filetypes = /xlsx|xls|xlsm/;
+  const filetypes = /xlsx/;
 
   // Check ext
   const extname = filetypes.test(path.extname(file.originalname).toLowerCase());

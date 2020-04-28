@@ -15,9 +15,19 @@
     <div class="info-modal hide-modal">
         <span class="close-button" onclick="toggleModal()">&times;</span>
         <h1 style="color: white; margin-bottom: 1rem;">Instructions</h1>
-        <li class="error">Please provide only excel file as input</li>
+        <li class="error">Please provide only excel file as input (with .xlsx extention only) & excel file must be in below format only.
+        <li class="error">Month names should be seperated by comma ( , ) if multiple months are present.
+        </li>
+        <div class="excel-demo-container">
+            <img src="images//excel_demo_structure.jpg" alt="excel-demo-source" />
+        </div>
         <li class="error">After the process completion it will provide the summary of the successfull &
             unsuccessfull operation.
+        </li>
+        <li class="error">You can download the zip file of successful operations which will also contain
+            a excel file ( failed_-_bills.xls ) of failed operations. You can copy the content of this file to a new .xlsx file 
+            & provide the new file ( with .xlsx extention ) as input. [ Note: Please don't provide the ( failed_-_bills.xls)
+            as input or don't rename it to a .xlsx file. ]
         </li>
     </div>
     <nav>

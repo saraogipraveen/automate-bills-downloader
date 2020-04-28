@@ -54,6 +54,7 @@ nav > span {
 }
 
 .info-modal {
+  width: 70vw;
   transition: top .5s;
   border-radius: .4rem;
   z-index: 40;
@@ -67,7 +68,7 @@ nav > span {
   /* background: linear-gradient(to right bottom,#3cba92, dodgerblue); */ */
 }
 .hide-modal {
-  top: -50rem;
+  top: -250rem;
 }
 
 .close-button {
@@ -80,6 +81,16 @@ nav > span {
 }
 .close-button:hover {
   color: tomato;
+}
+
+.excel-demo-container {
+  display: flex;
+  justify-content: start;
+  width: 100%;    
+}
+
+.excel-demo-container > img {
+  width: 100%;
 }
 
 .container {
@@ -190,6 +201,7 @@ li {
   background: linear-gradient(to right, #0ba360, #3cba92);
   display: flex;
   align-items: center;
+  text-align: justify;
 }
 
 .sign_div {
@@ -222,6 +234,11 @@ li {
 @media only screen and (max-width: 600px) {
   nav {
     justify-content: center;
+  }
+
+  .info-modal {
+    width: 95vw;
+    padding: 1.5rem;
   }
 
   .nav-des {

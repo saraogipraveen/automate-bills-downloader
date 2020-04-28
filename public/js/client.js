@@ -42,7 +42,7 @@ socket.on("pdf-generated", (arg) => {
   document.querySelector("#success-list").appendChild(li);
 });
 
-socket.on("pdf-error", (arg) => {
+socket.on("pdf-error", (message) => {
   let li = document.createElement("li");
   li.classList.add("error");
   let signDiv = document.createElement("div");
@@ -53,9 +53,7 @@ socket.on("pdf-error", (arg) => {
   signImg.setAttribute("alt", "sign image");
   signDiv.appendChild(signImg);
   let messageDiv = document.createElement("div");
-  let messageTextNode = document.createTextNode(
-    `Error : ${arg.message} while downloading pdf for consumer ${arg.consumer}`
-  );
+  let messageTextNode = document.createTextNode(`Error : ${message}`);
   messageDiv.appendChild(messageTextNode);
   li.appendChild(signDiv);
   li.appendChild(messageDiv);
@@ -81,7 +79,7 @@ socket.on("wait-for-user", function (buttonText, name) {
     button.style.padding = "0";
     let anchorNode = document.createElement("a");
     anchorNode.addEventListener("onclick", emitResoponseEvent);
-    anchorNode.setAttribute("href", `/bills.zip`);
+    anchorNode.setAttribute("href", `/generated_-_bills.zip`);
     button.classList.add("download");
     anchorNode.style.display = "inline-block";
     anchorNode.style.padding = "1rem 1.6rem";
